@@ -10,15 +10,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $country = $_POST['country'];
     $avatar = getRandomAvatar();
 
-    $sql = "INSERT INTO users (username, email, password, country, avatar) VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssss", $username, $email, $password, $country, $avatar);
-
-    if ($stmt->execute()) {
-        header("Location: login.php");
-        exit();
+    // Password validation
+    $password_regex = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/";
+    if (!preg_match($password_regex, $password)) {
+        $error = "Password must be at least 8 characters long and contain at least one number, one uppercase letter, one lowercase letter, and one special character.";
     } else {
-        $error = "Error: " . $stmt->error;
+        $sql = "INSERT INTO users (username, email, password, country, avatar) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssss", $username, $email, $password, $country, $avatar);
+
+        if ($stmt->execute()) {
+            header("Location: login.php");
+            exit();
+        } else {
+            $error = "Error: " . $stmt->error;
+        }
     }
 }
 ?>
@@ -84,5 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .catch(function (error) {
                 console.error('Error fetching country data:', error);
             });
+    });
+
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const password = document.querySelector('input[name="password"]').value;
+        const password_regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!password_regex.test(password)) {
+            e.preventDefault();
+            alert("Password must be at least 8 characters long and contain at least one number, one uppercase letter, one lowercase letter, and one special character.");
+        }
     });
 </script>
